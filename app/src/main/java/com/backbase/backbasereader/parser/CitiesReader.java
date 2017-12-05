@@ -1,5 +1,7 @@
 package com.backbase.backbasereader.parser;
 
+import android.content.Context;
+
 import com.backbase.backbasereader.model.City;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
@@ -21,9 +23,10 @@ public class CitiesReader {
 
     private static final String FILE_NAME = "cities.json";
 
-    public Map<String, TreeSet<City>> read(int pageNumber, int pageSize) throws Exception {
+    public Map<String, TreeSet<City>> read(Context context, int pageNumber, int pageSize) throws Exception {
         JsonFactory jsonFactory = new MappingJsonFactory();
-        InputStream is = getClass().getClassLoader().getResourceAsStream(FILE_NAME);
+        //InputStream is = getClass().getClassLoader().getResourceAsStream(FILE_NAME);
+        InputStream is = context.getAssets().open(FILE_NAME);
         JsonParser jsonParser = jsonFactory.createParser(is);
 
         ObjectMapper objectMapper = new ObjectMapper(jsonFactory);
