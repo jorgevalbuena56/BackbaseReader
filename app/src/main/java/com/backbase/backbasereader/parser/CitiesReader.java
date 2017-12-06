@@ -84,6 +84,10 @@ public class CitiesReader {
     }
 
     public static List<City> filter(List<City> cities, String query) {
+        if (cities == null || query == null) {
+            return new ArrayList<>();
+        }
+
         Trie trie = new Trie();
         HashMap<String, City> cityMapTemp = new HashMap<>();
         final List<City> filteredCityList = new ArrayList<>();
