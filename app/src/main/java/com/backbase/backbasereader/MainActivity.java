@@ -1,61 +1,143 @@
 package com.backbase.backbasereader;
 
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.SearchView;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
 
-import com.backbase.backbasereader.adapter.CityAdapter;
-import com.backbase.backbasereader.listener.EndlessRecyclerViewScrollListener;
-import com.backbase.backbasereader.model.City;
-import com.backbase.backbasereader.parser.CitiesReader;
+import com.backbase.backbasereader.listener.ListEvents;
+import com.google.android.gms.maps.model.LatLng;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeSet;
+public class MainActivity extends AppCompatActivity
+        implements SearchView.OnQueryTextListener, ListEvents {
 
-public class MainActivity extends AppCompatActivity {
-
-    private List<City> citiesLoaded = new ArrayList<>();
-    private CitiesReader citiesReader = new CitiesReader();
-    private RecyclerView.Adapter cityAdapter;
+    private CityListFragment cityListFragment;
+    private MapFragment mapFragment;
+    private MenuItem searchItem;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        RecyclerView recyclerView = findViewById(R.id.cities_rv);
-        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
-        recyclerView.setLayoutManager(linearLayoutManager);
-
-        cityAdapter = new CityAdapter(citiesLoaded);
-        loadNextPage(1);
-        recyclerView.setAdapter(cityAdapter);
-        recyclerView.addOnScrollListener(new EndlessRecyclerViewScrollListener(linearLayoutManager){
-            @Override
-            public void onLoadMore(int page, int totalItemsCount, RecyclerView view) {
-                // Triggered only when new data needs to be appended to the list
-                loadNextPage(page);
-            }
-        });
+        configureHomeToolbar();
+        cityListFragment = new CityListFragment();
+        swapFragments(cityListFragment);
     }
 
-    // Append the next page of data into the adapter
-    public void loadNextPage(int pageNumber) {
-        //  --> Append the new data objects to the existing set of items inside the array of items
-        //  --> Notify the adapter of the new items made with `notifyItemRangeInserted()`
-        try {
-            int positionStart = citiesLoaded.size();
-            Map<String, TreeSet<City>> queryCities = citiesReader.read(this, pageNumber, 50);
-            for (String key : queryCities.keySet()) {
-                TreeSet<City> cityNames = queryCities.get(key);
-                citiesLoaded.addAll(new ArrayList<>(cityNames));
+    /**
+     * Change back and forth the CityListFragment and the Map Fragment
+     * @param fragment
+     */
+    private void swapFragments(Fragment fragment) {
+        FragmentManager fm = getSupportFragmentManager();
+        FragmentTransaction fragmentTransaction = fm.beginTransaction();
+        fragmentTransaction.replace(R.id.content, fragment);
+        fragmentTransaction.addToBackStack(null);
+        fragmentTransaction.commit();
+    }
+
+    /**
+     * Configures the CityList toolbar to display the search
+     */
+    private void configureHomeToolbar() {
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayShowTitleEnabled(false);
+            getSupportActionBar().setHomeButtonEnabled(false);
+            getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+            if (searchItem != null) {
+                searchItem.setVisible(true);
+                SearchView searchView = (SearchView)searchItem.getActionView();
+                searchView.setQuery("",false); //clear the text
+                searchView.setIconified(true);//close the search editor and make search icon again
             }
-            cityAdapter.notifyItemRangeChanged(positionStart + 1, citiesLoaded.size());
-        } catch (Exception e) {
-            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Configures the Map Toolbar with the back button and the title of the city
+     * @param title
+     */
+    private void configureMapToolbar(String title) {
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setDisplayShowTitleEnabled(true);
+            getSupportActionBar().setTitle(title);
+            searchItem.setVisible(false);
+        }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main_menu, menu);
+
+        searchItem = menu.findItem(R.id.action_search);
+        final SearchView searchView = (SearchView)searchItem.getActionView();
+        searchView.setMaxWidth(Integer.MAX_VALUE);
+        searchView.setOnQueryTextListener(this);
+
+        return true;
+    }
+
+    @Override
+    public boolean onQueryTextSubmit(String query) {
+        return false;
+    }
+
+    @Override
+    public boolean onQueryTextChange(String newText) {
+        cityListFragment.search(newText);
+        return true;
+    }
+
+    @Override
+    public void onCityClicked(String name, LatLng position) {
+        if (mapFragment == null) {
+            mapFragment = new MapFragment();
+        }
+        mapFragment.setPositionToZoom(position);
+        configureMapToolbar(name);
+        swapFragments(mapFragment);
+    }
+
+    @Override
+    public void hideProgressBar() {
+        findViewById(R.id.progressBar).setVisibility(View.INVISIBLE);
+    }
+
+    @Override
+    public void showProgressBar() {
+        findViewById(R.id.progressBar).setVisibility(View.VISIBLE);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here.
+        int id = item.getItemId();
+
+        if(id == android.R.id.home){
+            onBackPressed();
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onBackPressed() {
+        FragmentManager fm = getSupportFragmentManager();
+        if (fm.getBackStackEntryCount() > 1) {
+            fm.popBackStack();
+            configureHomeToolbar();
+        } else if (fm.getBackStackEntryCount() == 1) {
+            finish();
+        } else {
+            super.onBackPressed();
         }
     }
 }

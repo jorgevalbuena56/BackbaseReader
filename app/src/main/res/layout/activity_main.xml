@@ -1,21 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/content"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="com.backbase.backbasereader.MainActivity">
 
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/cities_rv"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:paddingTop="8dp"
-        android:paddingBottom="4dp"
-        android:layout_marginBottom="4dp"
-        android:clipToPadding="false"
-        android:divider="@null"
-        android:scrollbarStyle="outsideOverlay"
-        android:transcriptMode="alwaysScroll"/>
-
-</android.support.constraint.ConstraintLayout>
+    <ProgressBar
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="30dp"
+        android:id="@+id/progressBar"
+        android:layout_gravity="center_horizontal"/>
+</FrameLayout>

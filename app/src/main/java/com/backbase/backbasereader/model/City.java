@@ -87,4 +87,24 @@ public class City implements Serializable, Comparable<City> {
         }
         return getName().compareToIgnoreCase(city.getName());
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof City)) return false;
+
+        City city = (City) o;
+
+        if (!getId().equals(city.getId())) return false;
+        if (!getName().equals(city.getName())) return false;
+        return getCountry().equals(city.getCountry());
+    }
+
+    @Override
+    public int hashCode() {
+        int result = getId().hashCode();
+        result = 31 * result + getName().hashCode();
+        result = 31 * result + getCountry().hashCode();
+        return result;
+    }
 }
